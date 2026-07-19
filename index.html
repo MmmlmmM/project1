@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>课堂实录标注与分析系统</title>
+  <link rel="stylesheet" href="/src/styles/main.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- 侧边导航 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
+          </svg>
+        </div>
+        <h1>课堂实录标注分析</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#upload" class="nav-item active" data-page="upload">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>视频上传</span>
+        </a>
+        <a href="#annotate" class="nav-item" data-page="annotate">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+          <span>智能标注</span>
+        </a>
+        <a href="#timeline" class="nav-item" data-page="timeline">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>时间轴分析</span>
+        </a>
+        <a href="#analysis" class="nav-item" data-page="analysis">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>数据分析</span>
+        </a>
+        <a href="#report" class="nav-item" data-page="report">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>反思报告</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 视频上传页面 -->
+      <section id="page-upload" class="page active">
+        <div class="page-header">
+          <h2>上传课堂实录视频</h2>
+          <p>支持 MP4、AVI、MOV 格式，建议上传完整课堂教学视频以获得最准确的分析结果</p>
+        </div>
+        <div class="upload-container">
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <h3>拖拽视频文件到此处</h3>
+            <p>或点击下方按钮选择文件</p>
+            <input type="file" id="videoInput" accept="video/*" hidden />
+            <button class="btn btn-primary" onclick="document.getElementById('videoInput').click()">
+              选择视频文件
+            </button>
+          </div>
+          <div class="upload-preview" id="uploadPreview" style="display:none">
+            <video id="previewVideo" controls preload="metadata" playsinline crossorigin="anonymous"></video>
+            <div class="preview-info">
+              <div class="info-item">
+                <label>文件名</label>
+                <span id="fileName">-</span>
+              </div>
+              <div class="info-item">
+                <label>时长</label>
+                <span id="fileDuration">-</span>
+              </div>
+              <div class="info-item">
+                <label>大小</label>
+                <span id="fileSize">-</span>
+              </div>
+              <button class="btn btn-success" id="startAnalysisBtn">
+                开始智能分析
+              </button>
+            </div>
+          </div>
+          <!-- 课程信息表单 -->
+          <div class="course-info-form" id="courseInfoForm" style="display:none">
+            <h3>课程基本信息</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>学科</label>
+                <select id="subject">
+                  <option value="">请选择学科</option>
+                  <option value="语文">语文</option>
+                  <option value="数学">数学</option>
+                  <option value="英语">英语</option>
+                  <option value="物理">物理</option>
+                  <option value="化学">化学</option>
+                  <option value="生物">生物</option>
+                  <option value="历史">历史</option>
+                  <option value="地理">地理</option>
+                  <option value="政治">政治</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>年级</label>
+                <select id="grade">
+                  <option value="">请选择年级</option>
+                  <option value="小学">小学</option>
+                  <option value="初中">初中</option>
+                  <option value="高中">高中</option>
+                  <option value="大学">大学</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>课型</label>
+                <select id="lessonType">
+                  <option value="">请选择课型</option>
+                  <option value="新授课">新授课</option>
+                  <option value="复习课">复习课</option>
+                  <option value="实验课">实验课</option>
+                  <option value="习题课">习题课</option>
+                  <option value="公开课">公开课</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>课题名称</label>
+                <input type="text" id="topicName" placeholder="请输入课题名称" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 智能标注页面 -->
+      <section id="page-annotate" class="page">
+        <div class="page-header">
+          <h2>智能标注面板</h2>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" id="autoAnnotateBtn">AI自动标注</button>
+            <button class="btn btn-outline" id="addManualTagBtn">手动添加标注</button>
+            <button class="btn btn-outline" id="exportTagsBtn">导出标注数据</button>
+          </div>
+        </div>
+        <div class="annotate-layout">
+          <div class="video-panel">
+            <div class="video-wrapper" id="annotateVideoWrapper">
+              <video id="annotateVideo" controls preload="metadata" playsinline crossorigin="anonymous"></video>
+              <div class="video-overlay" id="videoOverlay"></div>
+            </div>
+            <div class="video-controls-extra">
+              <button class="btn btn-sm" id="playPauseBtn">▶ 播放/暂停</button>
+              <button class="btn btn-sm" id="markMomentBtn">📍 标记时刻</button>
+              <span class="current-time" id="currentTimeDisplay">00:00 / 00:00</span>
+            </div>
+          </div>
+          <div class="tags-panel">
+            <div class="tags-toolbar">
+              <h3>标注标签</h3>
+              <div class="tag-filters">
+                <button class="tag-filter active" data-category="all">全部</button>
+                <button class="tag-filter" data-category="teacher">教师行为</button>
+                <button class="tag-filter" data-category="student">学生行为</button>
+                <button class="tag-filter" data-category="interaction">互动</button>
+                <button class="tag-filter" data-category="teaching">教学法</button>
+              </div>
+            </div>
+            <div class="quick-tags">
+              <h4>快速标注</h4>
+              <div class="quick-tag-list" id="quickTagList">
+                <!-- 动态生成 -->
+              </div>
+            </div>
+            <div class="tags-list" id="tagsList">
+              <h4>标注列表 <span class="tag-count" id="tagCount">0</span></h4>
+              <div class="tag-items" id="tagItems">
+                <div class="empty-state">暂无标注，请播放视频并添加标注</div>
+              </div>
+            </div>
+            <div class="tag-editor" id="tagEditor" style="display:none">
+              <h4>编辑标注</h4>
+              <div class="form-group">
+                <label>标注类型</label>
+                <select id="tagType">
+                  <option value="teacher_talk">教师讲解</option>
+                  <option value="teacher_question">教师提问</option>
+                  <option value="teacher_feedback">教师反馈</option>
+                  <option value="teacher_demo">教师示范</option>
+                  <option value="teacher_guide">教师引导</option>
+                  <option value="student_answer">学生回答</option>
+                  <option value="student_question">学生提问</option>
+                  <option value="student_discuss">学生讨论</option>
+                  <option value="student_practice">学生练习</option>
+                  <option value="student_present">学生展示</option>
+                  <option value="qa_interaction">师生问答</option>
+                  <option value="group_work">小组合作</option>
+                  <option value="media_use">媒体使用</option>
+                  <option value="board_writing">板书</option>
+                  <option value="silence">课堂沉默</option>
+                  <option value="transition">教学过渡</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>时间范围</label>
+                <div class="time-range">
+                  <input type="text" id="tagStartTime" placeholder="00:00" />
+                  <span>-</span>
+                  <input type="text" id="tagEndTime" placeholder="00:00" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>备注</label>
+                <textarea id="tagNote" rows="2" placeholder="添加备注..."></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary btn-sm" id="saveTagBtn">保存标注</button>
+                <button class="btn btn-outline btn-sm" id="cancelTagBtn">取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 时间轴分析页面 -->
+      <section id="page-timeline" class="page">
+        <div class="page-header">
+          <h2>时间轴分析</h2>
+          <div class="page-header-actions">
+            <select id="timelineViewSelect">
+              <option value="full">完整视图</option>
+              <option value="teacher">教师行为</option>
+              <option value="student">学生行为</option>
+              <option value="interaction">互动密度</option>
+            </select>
+          </div>
+        </div>
+        <div class="timeline-container">
+          <div class="timeline-header">
+            <div class="timeline-stats">
+              <div class="stat-card">
+                <span class="stat-value" id="totalTagsStat">0</span>
+                <span class="stat-label">总标注数</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-value" id="teacherRatioStat">0%</span>
+                <span class="stat-label">教师行为占比</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-value" id="studentRatioStat">0%</span>
+                <span class="stat-label">学生行为占比</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-value" id="interactionCountStat">0</span>
+                <span class="stat-label">互动次数</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-chart">
+            <canvas id="timelineChart"></canvas>
+          </div>
+          <div class="timeline-track" id="timelineTrack">
+            <!-- 时间轴轨道 -->
+          </div>
+          <div class="timeline-legend">
+            <h4>图例</h4>
+            <div class="legend-items">
+              <span class="legend-item teacher"><i></i>教师行为</span>
+              <span class="legend-item student"><i></i>学生行为</span>
+              <span class="legend-item interaction"><i></i>互动</span>
+              <span class="legend-item media"><i></i>媒体使用</span>
+              <span class="legend-item other"><i></i>其他</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 数据分析页面 -->
+      <section id="page-analysis" class="page">
+        <div class="page-header">
+          <h2>数据驱动分析</h2>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" id="refreshAnalysisBtn">刷新分析</button>
+          </div>
+        </div>
+        <div class="analysis-grid">
+          <!-- 弗兰德斯互动分析 -->
+          <div class="analysis-card flanders">
+            <h3>弗兰德斯互动分析 (FIAS)</h3>
+            <div class="chart-wrapper">
+              <canvas id="flandersChart"></canvas>
+            </div>
+            <div class="analysis-metrics">
+              <div class="metric">
+                <label>教师言语比率</label>
+                <div class="progress-bar"><div class="progress-fill teacher-fill" id="teacherSpeechBar" style="width:0%"></div></div>
+                <span id="teacherSpeechVal">0%</span>
+              </div>
+              <div class="metric">
+                <label>学生言语比率</label>
+                <div class="progress-bar"><div class="progress-fill student-fill" id="studentSpeechBar" style="width:0%"></div></div>
+                <span id="studentSpeechVal">0%</span>
+              </div>
+              <div class="metric">
+                <label>沉默/混乱比率</label>
+                <div class="progress-bar"><div class="progress-fill silence-fill" id="silenceBar" style="width:0%"></div></div>
+                <span id="silenceVal">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- S-T分析 -->
+          <div class="analysis-card st-analysis">
+            <h3>S-T 教学分析</h3>
+            <div class="chart-wrapper">
+              <canvas id="stChart"></canvas>
+            </div>
+            <div class="st-metrics">
+              <div class="metric-item">
+                <span class="metric-label">Rt (教师行为占有率)</span>
+                <span class="metric-value" id="rtValue">0</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">Ch (行为转换率)</span>
+                <span class="metric-value" id="chValue">0</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">教学模式</span>
+                <span class="metric-value highlight" id="teachingMode">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 提问类型分布 -->
+          <div class="analysis-card question-types">
+            <h3>提问类型分布</h3>
+            <div class="chart-wrapper">
+              <canvas id="questionChart"></canvas>
+            </div>
+          </div>
+
+          <!-- 课堂节奏 -->
+          <div class="analysis-card class-rhythm">
+            <h3>课堂节奏分析</h3>
+            <div class="chart-wrapper">
+              <canvas id="rhythmChart"></canvas>
+            </div>
+          </div>
+
+          <!-- 互动热度图 -->
+          <div class="analysis-card heatmap">
+            <h3>互动热度分布</h3>
+            <div class="chart-wrapper">
+              <canvas id="heatmapChart"></canvas>
+            </div>
+          </div>
+
+          <!-- 教学环节分布 -->
+          <div class="analysis-card phase-distribution">
+            <h3>教学环节时间分配</h3>
+            <div class="chart-wrapper">
+              <canvas id="phaseChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 反思报告页面 -->
+      <section id="page-report" class="page">
+        <div class="page-header">
+          <h2>教学反思报告</h2>
+          <div class="page-header-actions">
+            <button class="btn btn-primary" id="generateReportBtn">生成报告</button>
+            <button class="btn btn-outline" id="exportReportBtn">导出PDF</button>
+            <button class="btn btn-outline" id="printReportBtn">打印报告</button>
+          </div>
+        </div>
+        <div class="report-container" id="reportContainer">
+          <div class="report-empty" id="reportEmpty">
+            <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <h3>尚未生成反思报告</h3>
+            <p>完成视频标注和分析后，点击"生成报告"按钮获取详细的反思报告</p>
+            <button class="btn btn-primary" onclick="document.getElementById('generateReportBtn').click()">
+              立即生成
+            </button>
+          </div>
+          <div class="report-content" id="reportContent" style="display:none">
+            <!-- 报告内容动态生成 -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 模态框：手动标注 -->
+  <div class="modal-overlay" id="manualTagModal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>手动添加标注</h3>
+        <button class="modal-close" onclick="closeManualTagModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>标注类型</label>
+          <select id="manualTagType">
+            <option value="teacher_talk">教师讲解</option>
+            <option value="teacher_question">教师提问</option>
+            <option value="teacher_feedback">教师反馈</option>
+            <option value="teacher_demo">教师示范</option>
+            <option value="teacher_guide">教师引导</option>
+            <option value="student_answer">学生回答</option>
+            <option value="student_question">学生提问</option>
+            <option value="student_discuss">学生讨论</option>
+            <option value="student_practice">学生练习</option>
+            <option value="student_present">学生展示</option>
+            <option value="qa_interaction">师生问答</option>
+            <option value="group_work">小组合作</option>
+            <option value="media_use">媒体使用</option>
+            <option value="board_writing">板书</option>
+            <option value="silence">课堂沉默</option>
+            <option value="transition">教学过渡</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>开始时间</label>
+          <input type="text" id="manualStartTime" placeholder="MM:SS" />
+        </div>
+        <div class="form-group">
+          <label>结束时间</label>
+          <input type="text" id="manualEndTime" placeholder="MM:SS" />
+        </div>
+        <div class="form-group">
+          <label>备注</label>
+          <textarea id="manualNote" rows="3" placeholder="添加备注说明..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeManualTagModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveManualTag()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p id="loadingText">正在分析中...</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

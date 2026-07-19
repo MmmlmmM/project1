@@ -1,0 +1,18 @@
+{
+  "name": "teaching-reflection-agent",
+  "leadAgentId": "8444dae62b93476da22934af918d350d",
+  "workspacePath": "c:/Users/Administrator/Desktop/项目实践",
+  "createdAt": "2026-06-19T08:57:27.977Z",
+  "options": {
+    "workspacePath": "c:/Users/Administrator/Desktop/项目实践",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@teaching-reflection-agent",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    }
+  ],
+  "isAutoTeam": false
+}
